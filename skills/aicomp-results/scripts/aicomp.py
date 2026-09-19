@@ -8,6 +8,7 @@ import sys
 from client import authenticate, compact, resolve_record, save_json
 from check_score import object_key, score_exit_code, timestamp, validate_poll_options, wait_for_score
 from submit_result import submit, validate_title
+from leaderboard import main as leaderboard_main
 
 
 def receipt_source(client, owner, path):
@@ -25,6 +26,10 @@ def receipt_source(client, owner, path):
 
 
 def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv and argv[0] == "leaderboard":
+        return leaderboard_main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     send = commands.add_parser("submit", help="Submit work title and ZIP; writes a local receipt.")

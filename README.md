@@ -4,6 +4,7 @@
 
 1. `submit`：提交作品名称（不超过 20 字）及结果 ZIP。
 2. `score`：查询此次提交的评分，可等待评测完成。
+3. `leaderboard`：读取排行榜详情页中的全部公开分数，可导出 JSON/CSV。
 
 通过 HTTP 请求工作，无需点击网页。面向 `reg.aicomp.cn` 的学生账号，
 是基于页面协议实现的非官方工具。登录状态始终由使用者提供，不包含账号密码或 token。
@@ -70,6 +71,18 @@ python skills/aicomp-results/scripts/aicomp.py score --record-id "<报名记录I
 
 `--wait` 默认每 15 秒查一次、最多 600 秒，可通过 `--interval`、`--timeout` 修改。
 评分可能超过三分钟；等待超时不会重新提交。
+
+查看排行榜详情页的全部分数（不需要登录 token）：
+
+```powershell
+python skills/aicomp-results/scripts/aicomp.py leaderboard `
+  --url "https://reg.aicomp.cn/special/phb/detail?id=4832828643476639836&rwId=4829238709759119407&stbh=4829238709759119428" `
+  --stage "初赛" --format csv --output "leaderboard.csv"
+```
+
+该页面当前接口返回 `469` 条“初赛”记录，包含 `XH_`、`CSBH_`、`TDMC_`、
+`FS_`、`ZPZHTJSJ_` 和 `DFSJ_` 等字段。`leaderboard` 是只读公开接口，
+不需要提供 `auth`。
 
 示例评分输出（节选）：
 

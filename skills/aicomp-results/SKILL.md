@@ -5,7 +5,7 @@ description: 通过 HTTP 请求向 reg.aicomp.cn 提交 AIC 赛题结果 ZIP 和
 
 # AIC 结果提交与查分
 
-仅处理用户账号的结果提交和评分查询，使用本技能的 `scripts/aicomp.py`，不模拟鼠标点击。
+处理用户账号的结果提交、评分查询和公开排行榜读取，使用本技能的 `scripts/aicomp.py`，不模拟鼠标点击。
 
 ## 登录与目标
 
@@ -61,6 +61,24 @@ Cookie 数据库或其他用户凭证，也不把过去账号的 token 内置为
 并保留原始备注。`miou_text` 保留小数位；`miou=null` 时不要编造分数。
 提交成功不等于评分完成。报告作品名称/文件、状态、分数或失败原因；
 不要向用户输出完整业务记录或 token。
+
+## 3. 查看排行榜全部分数
+
+排行榜详情页可直接读取，不需要登录 token。页面 URL 形如：
+
+```text
+https://reg.aicomp.cn/special/phb/detail?id=<榜单ID>&rwId=<任务ID>&stbh=<赛题编号>
+```
+
+```text
+<python> <skill>/scripts/aicomp.py leaderboard --url "<排行榜详情页URL>" --stage "初赛" --format csv --output "leaderboard.csv"
+```
+
+脚本先调用公开的 `POST /third/jsphb`（`type=JSJD`）取得阶段名称，
+再调用同一接口（`type=JSDF`）读取全部排行榜记录。结果包含排名、参赛编号、
+队伍名称、分数、提交时间和打分时间；默认输出 JSON，`--format csv` 可导出 CSV。
+阶段未指定时使用页面发布的第一个阶段。该接口返回公开榜单，不会读取用户私有 token，
+也不会触发提交、评分或任何写入操作。
 
 ## 运行环境与验证边界
 
