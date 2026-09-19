@@ -96,6 +96,50 @@ python skills/aicomp-results/scripts/aicomp.py leaderboard `
 }
 ```
 
+## 多赛题支持
+
+已验证两种评分格式：
+
+| 赛题 | 返回字段 |
+| --- | --- |
+| 无人机低空航拍图像语义分割 | `BZ_` 含 mIoU；`FS_` 为服务端分数 |
+| 面向噪声标签数据的细粒度图像识别鲁棒微调 | `FS_` 为分数；`BZ_` 可以为空 |
+
+`score` 命令新增 `score`、`score_text`、`score_source`。
+其中 `score_text` 保留 `FS_` 原有精度；`miou`/`miou_text` 继续单独返回，
+不把服务端通用分数自动转换成准确率或 mIoU。未完成或失败的记录不输出旧分数。
+例如仅有数值分数时，输出可为（合成示例）：
+
+```json
+{
+  "outcome": "score_completed",
+  "status": "DONE",
+  "score": 81.23456789012345,
+  "score_text": "81.23456789012345",
+  "score_source": "FS_",
+  "miou": null,
+  "message": ""
+}
+```
+
+两种赛题使用相同的 `submit` 和 `score` 命令，由用户提供的登录状态及报名记录
+确定目标；没有内置用户账号。作品名称由 `--title` 提供，例如：
+
+```powershell
+python skills/aicomp-results/scripts/aicomp.py submit --title "识别模型v2" --file "C:\results\pred_results.zip"
+```
+
+噪声标签细粒度识别赛题的公开排行榜：
+
+```powershell
+python skills/aicomp-results/scripts/aicomp.py leaderboard `
+  --url "https://reg.aicomp.cn/special/phb/detail?id=4832828643476639839&rwId=4829238709759119407&stbh=4829238709759119431" `
+  --stage "初赛" --format csv --output "recognition-leaderboard.csv"
+```
+
+`/app/JSGLPT/65b75207a58fdc32c79e9842` 是共享的个人打榜状态页，
+不能代替公开排行榜详情 URL，也不能仅凭这个地址或 ZIP 文件名判断账号所属赛题。
+
 标准输出为 JSON，进度和错误写标准错误。退出码：
 
 | 代码 | 含义 |
@@ -125,6 +169,8 @@ python skills/aicomp-results/scripts/aicomp.py leaderboard `
 ## 验证范围
 
 已真实请求验证：认证、报名记录查询、ZIP SHA-256 比对、评分查询。
+噪声标签细粒度识别赛题也已验证本地 ZIP 与当前提交一致、跳过重复写入，
+并按回执查询 `FS_` 分数。
 已通过模拟测试验证：匹配文件和账号、旧分数排除、等待/失败/超时、
 重复提交保护及提交载荷中的作品名称/结果字段。
 

@@ -75,6 +75,38 @@ class ScoreTests(unittest.TestCase):
         zero = dict(self.row, BZ_="打分成功，mIoU=0.000000")
         self.assertEqual(score.score_report(self.source, zero)["miou"], 0.0)
 
+    def test_numeric_score_without_remark(self):
+        row = dict(self.row, BZ_=None, FS_="81.23456789012345")
+        report = score.score_report(self.source, row)
+        self.assertEqual(report["outcome"], "score_completed")
+        self.assertEqual(report["score_text"], "81.23456789012345")
+        self.assertEqual(report["score"], 81.23456789012345)
+        self.assertEqual(report["score_source"], "FS_")
+        self.assertIsNone(report["miou"])
+        self.assertEqual(report["message"], "")
+
+    def test_server_score_and_miou_remain_separate(self):
+        report = score.score_report(self.source, dict(self.row, FS_="69.260983"))
+        self.assertEqual(report["score_text"], "69.260983")
+        self.assertEqual(report["miou_text"], "0.692610")
+
+    def test_incomplete_or_failed_rows_do_not_expose_stale_numeric_score(self):
+        for status, failure in [("RUNNING", ""), ("FAILED", ""), ("DONE", "Invalid ZIP")]:
+            report = score.score_report(self.source, dict(self.row, DQZT_=status,
+                                                        SBYY_=failure, FS_="99.9"))
+            self.assertIsNone(report["score"])
+            self.assertIsNone(report["score_text"])
+            self.assertIsNone(report["score_source"])
+
+    def test_numeric_score_zero_missing_and_invalid(self):
+        for raw in [0, "0", "0.000000"]:
+            report = score.score_report(self.source, dict(self.row, FS_=raw))
+            self.assertEqual(report["score"], 0.0)
+        for raw in [None, "", "--", "NaN", "Infinity", True, {}, []]:
+            report = score.score_report(self.source, dict(self.row, FS_=raw))
+            self.assertIsNone(report["score"])
+            self.assertIsNone(report["score_text"])
+
     def test_poll_pending_then_done(self):
         with patch.object(score, "find_score", side_effect=[None, self.row]) as query, \
                 patch.object(score, "save_json"), \

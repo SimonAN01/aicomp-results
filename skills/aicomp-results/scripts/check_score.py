@@ -104,6 +104,7 @@ def score_report(source, row):
         "problem": source.get("STMC_"), "server_file": object_key(source.get(RESULT_FIELD)),
         "outcome": "awaiting_score_record", "status": None, "miou": None,
         "miou_text": None, "message": None, "failure_reason": None,
+        "score": None, "score_text": None, "score_source": None,
     }
     if row is None:
         return report
@@ -119,6 +120,18 @@ def score_report(source, row):
         report["outcome"] = "score_failed"
     elif status.upper() == "DONE":
         report["outcome"] = "score_completed"
+        # Some tracks return only FS_, with no BZ_ or named metric.
+        # Keep server units and precision; do not reinterpret it as accuracy/mIoU.
+        raw_score = row.get("FS_")
+        if isinstance(raw_score, (str, int, float)) and not isinstance(raw_score, bool):
+            text = str(raw_score).strip()
+            try:
+                number = float(text)
+            except ValueError:
+                pass
+            else:
+                if math.isfinite(number):
+                    report.update(score=number, score_text=text, score_source="FS_")
         match = MIOU.search(message)
         if match:
             number = float(match[1])
