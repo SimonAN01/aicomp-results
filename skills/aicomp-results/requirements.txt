@@ -1,0 +1,2 @@
+cryptography>=43,<50
+oss2>=2.19,<3

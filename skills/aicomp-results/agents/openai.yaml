@@ -1,0 +1,4 @@
+interface:
+  display_name: "AIC 结果提交与查分"
+  short_description: "使用用户提供的登录凭证，通过请求提交赛题 ZIP 并查询对应评分"
+  default_prompt: "使用 $aicomp-results 提交我的结果 ZIP 和作品名称，然后查询此次提交的评分。"
