@@ -1,6 +1,6 @@
 # AIC 结果提交与查分
 
-可安装的 Codex Skill，同时提供仅有两个子命令的 Python 工具：
+可安装的 Codex Skill，同时提供三个子命令的 Python 工具：
 
 1. `submit`：提交作品名称（不超过 20 字）及结果 ZIP。
 2. `score`：查询此次提交的评分，可等待评测完成。
@@ -80,7 +80,7 @@ python skills/aicomp-results/scripts/aicomp.py leaderboard `
   --stage "初赛" --format csv --output "leaderboard.csv"
 ```
 
-该页面当前接口返回 `469` 条“初赛”记录，包含 `XH_`、`CSBH_`、`TDMC_`、
+2026-09-19 实测该页面接口返回 `469` 条“初赛”记录，包含 `XH_`、`CSBH_`、`TDMC_`、
 `FS_`、`ZPZHTJSJ_` 和 `DFSJ_` 等字段。`leaderboard` 是只读公开接口，
 不需要提供 `auth`。
 

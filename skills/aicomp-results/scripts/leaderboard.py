@@ -42,10 +42,12 @@ def _post(payload, timeout=45):
 def get_stages(board_id, stbh):
     data = _post({"type": "JSJD", "bdId": board_id, "stbh": stbh}).get("data") or {}
     names = [name for name in str(data.get("JDMC_") or "").split(",") if name]
+    publication = next(iter(data.get("jsbdList") or []), {})
     return {
         "board_id": board_id, "stbh": stbh, "task_id": data.get("RWID_"),
         "problem": data.get("STMC_"), "competition": data.get("JSMC_"),
-        "update_mode": data.get("GXFS_"), "published_at": data.get("ZXFBSJ_"),
+        "update_mode": publication.get("GXFS_", data.get("GXFS_")),
+        "published_at": publication.get("ZXFBSJ_"),
         "stages": names,
     }
 
@@ -56,6 +58,7 @@ def fetch_scores(task_id, stbh, stage, *, page_size=1000):
     page = 0
     rows = []
     total = None
+    seen = set()
     while True:
         result = _post({
             "pageNo": page, "pageSize": page_size, "type": "JSDF",
@@ -64,12 +67,26 @@ def fetch_scores(task_id, stbh, stage, *, page_size=1000):
         batch = result.get("data") or []
         if not isinstance(batch, list):
             raise RuntimeError("Unexpected leaderboard data.")
-        rows.extend(batch)
-        total = result.get("total", total)
-        if len(rows) >= total if isinstance(total, int) else True:
+        current_total = result.get("total")
+        if not isinstance(current_total, int) or isinstance(current_total, bool) or current_total < 0:
+            raise RuntimeError("Missing valid leaderboard total; completeness cannot be verified.")
+        if total is not None and current_total != total:
+            raise RuntimeError("Leaderboard changed during retrieval; retry the read.")
+        total = current_total
+        for row in batch:
+            if not isinstance(row, dict):
+                raise RuntimeError("Unexpected leaderboard row.")
+            entry = row.get("CSBH_")
+            if not entry or entry in seen:
+                raise RuntimeError("Missing or repeated entry; refusing to report a complete leaderboard.")
+            if row.get("SDSTBH_") != stbh or row.get("DQJD_") != stage:
+                raise RuntimeError("Leaderboard returned a different problem or stage.")
+            seen.add(entry)
+            rows.append(row)
+        if len(rows) == total:
             break
-        if not batch:
-            break
+        if not batch or len(rows) > total:
+            raise RuntimeError("Leaderboard row count does not match the reported total.")
         page += 1
         if page >= 100:
             raise RuntimeError("Too many leaderboard pages.")
@@ -114,6 +131,10 @@ def main(argv=None):
     stage = args.stage or (info["stages"][0] if info["stages"] else None)
     if not stage:
         raise ValueError("No stage was published for this leaderboard.")
+    if stage not in info["stages"]:
+        raise ValueError("Choose a published stage: " + ", ".join(info["stages"]))
+    if info["task_id"] and info["task_id"] != values["rwId"]:
+        raise ValueError("Task ID does not match the selected leaderboard.")
     rows, total = fetch_scores(values["rwId"], values["stbh"], stage)
     output = normalize(rows)
     write_output(output, args.output, args.format)

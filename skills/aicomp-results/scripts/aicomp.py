@@ -1,4 +1,4 @@
-"""Two request-only commands: submit a ZIP and query its score."""
+"""Request-only commands: submit, score and public leaderboard."""
 
 import argparse
 import json
@@ -32,6 +32,7 @@ def main(argv=None):
         return leaderboard_main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("leaderboard", help="Read all public leaderboard scores; use leaderboard --help.")
     send = commands.add_parser("submit", help="Submit work title and ZIP; writes a local receipt.")
     send.add_argument("--title", required=True, help="Work title, 1-20 characters.")
     send.add_argument("--file", required=True, help="Path to the result ZIP.")

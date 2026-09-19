@@ -1,6 +1,6 @@
 ---
 name: aicomp-results
-description: 通过 HTTP 请求向 reg.aicomp.cn 提交 AIC 赛题结果 ZIP 和作品名称，或查询指定提交的评分及 mIoU。需要用户提供当前账号的 auth 登录凭证。
+description: 通过 HTTP 请求向 reg.aicomp.cn 提交 AIC 赛题结果 ZIP 和作品名称、查询指定提交的评分及 mIoU，或读取全部公开排行榜分数。提交与个人查分需要用户提供 auth，公开排行榜无需登录。
 ---
 
 # AIC 结果提交与查分
